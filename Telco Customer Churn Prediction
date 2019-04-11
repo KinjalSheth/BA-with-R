@@ -1,0 +1,245 @@
+library(tidyverse)
+library(modelr)
+library(lubridate) # for date and time
+library(caTools) # library used for splitting the dataset
+
+getwd()
+teleco <-  read.csv("TCC.csv")
+names(teleco)
+head(teleco)
+# Finding the unique values for each of the predictors
+#-----------------------------------------------------
+unique(teleco$gender) 
+# Levels: Female Male
+unique(teleco$SeniorCitizen)
+# Levels: 0 1
+unique(teleco$Partner)
+# Levels: No Yes
+unique(teleco$Dependents)
+# Levels: Female Male
+unique(teleco$PhoneService)
+# Levels: No Yes
+unique(teleco$MultipleLines)
+# Levels: No, No phone service, Yes
+unique(teleco$InternetService)
+# Levels: DSL Fiber optic No
+unique(teleco$OnlineSecurity)
+#Levels: No ,No internet service, Yes
+unique(teleco$OnlineBackup)
+#Levels: No No internet service Yes
+unique(teleco$DeviceProtection)
+# Levels: No, No internet service ,Yes
+unique(teleco$TechSupport)
+# Levels: No, No internet service, Yes
+unique(teleco$StreamingTV)
+# Levels: No, No internet service ,Yes
+unique(teleco$StreamingMovies)
+# Levels: No, No internet service ,Yes
+unique(teleco$Contract)
+# Levels: Month-to-month, One year, Two year
+unique(teleco$PaperlessBilling)
+# Levels: No Yes
+unique(teleco$PaymentMethod)
+# Levels: Bank transfer (automatic), Credit card (automatic) ,Electronic check, Mailed check
+
+
+# Checking whether the variable is having null values and getting the count
+#--------------------------------------------------------------------------
+sum(is.na(teleco$customerID)) #0
+sum(is.na(teleco$gender)) # 0
+sum(is.na(teleco$SeniorCitizen)) # 0
+sum(is.na(teleco$Partner)) # 0
+sum(is.na(teleco$Dependents)) # 0
+sum(is.na(teleco$PhoneService)) # 0
+sum(is.na(teleco$MultipleLines)) # 0
+sum(is.na(teleco$InternetService)) # 0
+sum(is.na(teleco$OnlineSecurity)) # 0
+sum(is.na(teleco$OnlineBackup))  # 0
+sum(is.na(teleco$DeviceProtection)) # 0
+sum(is.na(teleco$TechSupport)) # 0
+sum(is.na(teleco$StreamingTV)) # 0
+sum(is.na(teleco$StreamingMovies)) # 0
+sum(is.na(teleco$Contract)) # 0
+sum(is.na(teleco$PaperlessBilling)) # 0
+sum(is.na(teleco$PaymentMethod)) # 0
+sum(is.na(teleco$TotalCharges)) # 11
+
+
+#Check for duplicate customer ID
+# Checked in Excel , FOund No duplicate id
+
+# As the total charges is having 11 N/A values we are replacing it with the mean value of the totalcharges.
+#__________________________________________________________________________________________________________
+
+# checking the row number with NA values in TotalCharges column
+which(is.na(teleco$TotalCharges))
+# 489  754  937 1083 1341 3332 3827 4381 5219 6671 6755
+
+# omitting the rows with NA values in Totalcharges column
+telco_na_rm <- na.omit(teleco, cols = "TotalCharges")
+
+# Finding  the mean of the column                                
+telco_tchg_mean <- mean(telco_na_rm$TotalCharges)
+
+# replacing the NA values in Total charges column with the mean value
+teleco$TotalCharges[c(489,754,937,1083,1341,3332,3827,4381,5219,6671,6755)] <-  telco_tchg_mean
+
+# Converting into dummy variables```
+for(level in unique(teleco$gender)){
+  teleco[paste("Gender", level, sep = "_")] <- ifelse(teleco$gender == level, 1, 0)
+}
+
+for(level in unique(teleco$SeniorCitizen)){
+  teleco[paste("Senior Citizen", level, sep = "_")] <- ifelse(teleco$SeniorCitizen == level, 1, 0)
+}
+
+for(level in unique(teleco$Partner)){
+  teleco[paste("Partner", level, sep = "_")] <- ifelse(teleco$Partner == level, 1, 0)
+}
+
+
+for(level in unique(teleco$Dependents)){
+  teleco[paste("Dependents", level, sep = "_")] <- ifelse(teleco$Dependents == level, 1, 0)
+}
+
+for(level in unique(teleco$PhoneService)){
+  teleco[paste("PhoneService", level, sep = "_")] <- ifelse(teleco$PhoneService == level, 1, 0)
+}
+
+
+for(level in unique(teleco$MultipleLines)){
+  teleco[paste("MultipleLines", level, sep = "_")] <- ifelse(teleco$MultipleLines == level, 1, 0)
+}
+
+
+for(level in unique(teleco$InternetService)){
+  teleco[paste("Internet Service", level, sep = "_")] <- ifelse(teleco$InternetService == level, 1, 0)
+}
+
+
+for(level in unique(teleco$OnlineSecurity)){
+  teleco[paste("Online Security", level, sep = "_")] <- ifelse(teleco$OnlineSecurity == level, 1, 0)
+}
+
+
+for(level in unique(teleco$OnlineBackup)){
+  teleco[paste("Online_Backup", level, sep = "_")] <- ifelse(teleco$OnlineBackup == level, 1, 0)
+}
+
+
+for(level in unique(teleco$DeviceProtection)){
+  teleco[paste("DeviceProtection", level, sep = "_")] <- ifelse(teleco$DeviceProtection == level, 1, 0)
+}
+
+
+for(level in unique(teleco$TechSupport)){
+  teleco[paste("Tech Support", level, sep = "_")] <- ifelse(teleco$TechSupport == level, 1, 0)
+}
+
+
+for(level in unique(teleco$StreamingTV)){
+  teleco[paste("tv", level, sep = "_")] <- ifelse(teleco$StreamingTV == level, 1, 0)
+}
+
+for(level in unique(teleco$StreamingMovies)){
+  teleco[paste("Movies", level, sep = "_")] <- ifelse(teleco$StreamingMovies == level, 1, 0)
+}
+
+
+for(level in unique(teleco$Contract)){
+  teleco[paste("Contract", level, sep = "_")] <- ifelse(teleco$Contract == level, 1, 0)
+}
+
+for(level in unique(teleco$PaperlessBilling)){
+  teleco[paste("PaperLessBilling", level, sep = "_")] <- ifelse(teleco$PaperlessBilling == level, 1, 0)
+}
+
+for(level in unique(teleco$PaymentMethod)){
+  teleco[paste("PaymentMethod", level, sep = "_")] <- ifelse(teleco$PaymentMethod == level, 1, 0)
+}
+
+#Deleting original categorical variables
+
+teleco_new <- teleco
+teleco_new['gender'] <- NULL
+teleco_new['Partner'] <- NULL
+teleco_new['Dependents'] <- NULL
+teleco_new['PhoneService'] <- NULL
+teleco_new['MultipleLines'] <- NULL
+teleco_new['InternetService'] <- NULL
+teleco_new['OnlineSecurity'] <- NULL
+teleco_new['OnlineBackup'] <- NULL
+teleco_new['DeviceProtection'] <- NULL
+teleco_new['TechSupport'] <- NULL
+teleco_new['StreamingTV'] <- NULL
+teleco_new['StreamingMovies'] <- NULL
+teleco_new['Contract'] <- NULL
+teleco_new['PaperlessBilling'] <- NULL
+teleco_new['PaymentMethod'] <- NULL
+
+# Check for correlation
+
+
+## Splitting the data into training and testing data
+
+```{r}
+split_factor <- sample.split(teleco_new,SplitRatio = 0.8) # to split the dataset into test and training dataset by
+# a ratio of 0.8 that is 80% training and 20% testing
+
+teleco_train <- subset(teleco_new, split_factor == 'TRUE') # assigning the data which is having the split_factor = TRUE 
+# from the Data1 dataset to a training dataset
+teleco_test  <- subset(teleco_new,split_factor == 'FALSE') # assigning the data which is having the split_factor = FALSE  
+# from the Data1 dataset to a training dataset
+colnames[teleco]
+teleco_train_1 <- teleco_train
+teleco_train_1['customerID'] <- NULL
+teleco_train_1['Gender'] <- NULL
+teleco_train_1['SeniorCitizen'] <- NULL
+teleco_train_1['Partner'] <- NULL
+teleco_train_1['Dependents'] <- NULL
+teleco_train_1['PhoneService'] <- NULL
+teleco_train_1['MultipleLines'] <- NULL
+teleco_train_1['InternetService'] <- NULL
+teleco_train_1['OnlineSecurity'] <- NULL
+teleco_train_1['OnlineBackup'] <- NULL
+teleco_train_1['DeviceProtection'] <- NULL
+teleco_train_1['tv'] <- NULL
+teleco_train_1['Movies'] <- NULL
+
+teleco_test_1 <- teleco_test
+teleco_test_1['customerID'] <- NULL
+teleco_test_1['Gender']<- NULL
+teleco_test_1['SeniorCitizen'] <- NULL
+teleco_test_1['Partner'] <- NULL
+teleco_test_1['Dependents'] <- NULL
+teleco_test_1['PhoneService'] <- NULL
+teleco_test_1['MultipleLines'] <- NULL
+teleco_test_1['InternetService'] <- NULL
+teleco_test_1['OnlineSecurity'] <- NULL
+teleco_test_1['DeviceProtection'] <- NULL
+teleco_test_1['tv'] <- NULL
+teleco_test_1['Movies'] <- NULL
+
+mod1<-glm(Churn~ .,family=binomial,data = teleco_train_1)
+summary(mod1)
+teleco_test_1$probability<-predict(mod1,teleco_test_1,type='response')
+teleco_test_1$pred<-'No'
+teleco_test_1$pred[teleco_test_1$probability>0.5]<-'Yes'
+
+# Confusion matrix
+MyData <- with(teleco_test_1,
+               table(pred,Churn))
+
+with(teleco_test_1,
+     mean(pred==Churn))
+
+
+write.csv(MyData, file = "MyData.csv")
+
+# Model 2
+# Model 3
+# Model 4
+# MOdel 5
+# Model 6
+
+```
